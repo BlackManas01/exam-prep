@@ -46,17 +46,36 @@ const aiQuestionSchema = z.object({
   difficulty: z.enum(["EASY", "MEDIUM", "HARD", "EXPERT"]).optional(),
 });
 
+// Subject-specific scope guard so a weak model can't drift off-topic (e.g.
+// writing English vocabulary questions in the General Awareness section).
+function subjectGuard(subject: string): string {
+  const s = subject.toLowerCase();
+  if (s.includes("general awareness") || s.includes("general studies"))
+    return "This is STATIC GENERAL KNOWLEDGE + CURRENT AFFAIRS — i.e. History, Geography, Indian Polity & Constitution, Economy, General Science (Physics/Chemistry/Biology), Static GK and current affairs. It is NOT an English/language or vocabulary section: do NOT write idioms, synonyms, antonyms, grammar, spelling or one-word-substitution questions.";
+  if (s.includes("english"))
+    return "This is the ENGLISH LANGUAGE section — grammar, vocabulary (synonyms/antonyms), idioms & phrases, error spotting, sentence improvement, cloze test, reading comprehension and one-word substitution.";
+  if (s.includes("computer"))
+    return "This is COMPUTER KNOWLEDGE — computer fundamentals, hardware, software, operating systems, MS Office, internet, networking, memory/storage, abbreviations and basic security.";
+  if (s.includes("reasoning") || s.includes("intelligence"))
+    return "This is LOGICAL REASONING — analogies, series, coding-decoding, syllogisms, blood relations, directions, ranking, puzzles etc. No language or general-knowledge questions.";
+  if (s.includes("quantitative") || s.includes("math") || s.includes("aptitude") || s.includes("numerical"))
+    return "This is QUANTITATIVE APTITUDE / MATHEMATICS — arithmetic, algebra, geometry, trigonometry, mensuration, number system and data interpretation, with numeric answers.";
+  return `Keep every question strictly within the subject "${subject}".`;
+}
+
 function buildMessages(p: GenerateParams) {
   const diff = p.difficulty ?? "MEDIUM";
   const topicLine = p.topic ? ` on the topic "${p.topic}"` : "";
   const system = [
     "You are an expert question setter for Indian government competitive exams.",
     "You write factually-correct, exam-accurate single-correct multiple-choice questions.",
+    "You strictly keep every question within the requested subject and never drift to another subject.",
     "Always return STRICT JSON only, matching the requested schema. No markdown.",
   ].join(" ");
 
   const user = `Generate ${p.count} unique single-correct MCQs for the "${p.examName}" exam, section "${p.sectionName}" (subject: ${p.subject})${topicLine}.
 Difficulty: ${diff}.
+CRITICAL — STAY ON SUBJECT: Every question MUST belong to the subject "${p.subject}". ${subjectGuard(p.subject)} Do NOT generate questions from any other subject.
 Base the questions on the official syllabus and the style/pattern of this exam's previous years' papers (last 5-10 years), covering frequently-asked topics.
 Make them EXAM-STANDARD and genuinely challenging — like the real exam, not easy. Use application/analytical questions, statement-based questions, and strong, plausible distractors so guessing is hard. Avoid trivial one-line recall.
 Every fact and answer key MUST be accurate. Each question must have exactly ${p.optionsPerQuestion} options, exactly one correct, and a concise step-by-step or factual explanation.
