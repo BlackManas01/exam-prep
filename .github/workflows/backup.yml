@@ -1,0 +1,37 @@
+name: Backup question bank
+
+# Daily automatic backup of the curated (AI + MANUAL) question bank to a
+# downloadable artifact — zero manual effort. Also runnable on demand.
+on:
+  schedule:
+    - cron: "0 1 * * *" # every day at 01:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Export curated questions to JSON
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: node scripts/export-ai-json.cjs
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: question-bank-backup-${{ github.run_id }}
+          path: backups/ai-questions-export.json
+          retention-days: 90
