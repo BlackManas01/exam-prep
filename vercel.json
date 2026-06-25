@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-current-affairs",
+      "schedule": "30 2 * * *"
+    }
+  ]
+}

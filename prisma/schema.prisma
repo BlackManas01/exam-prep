@@ -1,0 +1,154 @@
+// Prisma schema for the AI-powered government exam preparation platform.
+//
+// DATABASE PORTABILITY
+// --------------------
+// The schema avoids DB-specific features (e.g. native enums) so it runs on both
+// SQLite (zero-config local dev — the default below) and PostgreSQL (production).
+//
+//   * Local dev (default):   provider = "sqlite",     DATABASE_URL="file:./dev.db"
+//   * Production (Postgres):  provider = "postgresql", DATABASE_URL="postgresql://..."
+//                             (use the included docker-compose.yml)
+//
+// To switch to PostgreSQL: change `provider` below to "postgresql", point
+// DATABASE_URL at Postgres, then run `npm run db:push && npm run db:seed`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Exam blueprint (structure of a real exam: sections, marking, timing)
+// ---------------------------------------------------------------------------
+
+model Exam {
+  id                   String    @id @default(cuid())
+  code                 String    @unique // e.g. "ssc-cgl-tier1"
+  name                 String
+  shortName            String
+  description          String
+  category             String // SSC | BANKING | RAILWAYS | UPSC | STATE_PSC
+  totalQuestions       Int
+  totalMarks           Float
+  durationSeconds      Int
+  marksPerCorrect      Float
+  negativeMarkPerWrong Float
+  hasSectionalTiming   Boolean   @default(false)
+  optionsPerQuestion   Int       @default(4)
+  displayOrder         Int       @default(0)
+  isActive             Boolean   @default(true)
+  sections             Section[]
+  createdAt            DateTime  @default(now())
+}
+
+model Section {
+  id                     String  @id @default(cuid())
+  exam                   Exam    @relation(fields: [examCode], references: [code], onDelete: Cascade)
+  examCode               String
+  code                   String // e.g. "reasoning"
+  name                   String
+  displayOrder           Int
+  questionCount          Int
+  sectionDurationSeconds Int? // only used when hasSectionalTiming = true
+
+  @@unique([examCode, code])
+}
+
+// ---------------------------------------------------------------------------
+// Question bank
+// ---------------------------------------------------------------------------
+
+model Question {
+  id          String   @id @default(cuid())
+  examCode    String
+  sectionCode String
+  subject     String
+  topic       String
+  difficulty  String // EASY | MEDIUM | HARD | EXPERT
+  stem        String
+  explanation String
+  source      String   @default("SEED") // SEED | MANUAL | AI
+  // SHA-256 of normalized stem+options. Unique per exam+section so the same
+  // concept can be reused across exams while preventing duplicates within one.
+  contentHash String
+  isActive    Boolean  @default(true)
+  options     Option[]
+  createdAt   DateTime @default(now())
+
+  @@unique([examCode, sectionCode, contentHash])
+  @@index([examCode, sectionCode, difficulty])
+}
+
+model Option {
+  id         String   @id @default(cuid())
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId String
+  text       String
+  isCorrect  Boolean  @default(false)
+  displayOrder Int
+
+  @@index([questionId])
+}
+
+// ---------------------------------------------------------------------------
+// Test attempts
+// ---------------------------------------------------------------------------
+
+model Attempt {
+  id               String        @id @default(cuid())
+  examCode         String
+  level            String        @default("REAL") // REAL | SLIGHTLY_HARDER | TWO_X | CUSTOM
+  status           String        @default("IN_PROGRESS") // IN_PROGRESS | SUBMITTED
+  // Clerk user id (preferred). candidateName kept for display + legacy/anon.
+  userId           String?
+  candidateName    String          @default("Candidate")
+  startedAt        DateTime        @default(now())
+  submittedAt      DateTime?
+  durationSeconds  Int // total allowed time snapshot
+  // Result summary (populated on submit)
+  totalMarks       Float           @default(0)
+  scoredMarks      Float           @default(0)
+  correctCount     Int             @default(0)
+  wrongCount       Int             @default(0)
+  unattemptedCount Int             @default(0)
+  accuracy         Float           @default(0)
+  timeTakenSeconds Int             @default(0)
+  items            AttemptItem[]
+
+  @@index([userId])
+}
+
+// Daily current-affairs entries (a readable archive students can browse). Added
+// by the admin from a trusted source — the AI cannot reliably source recent
+// events. `date` is YYYY-MM-DD for easy grouping.
+model CurrentAffair {
+  id        String   @id @default(cuid())
+  date      String // YYYY-MM-DD
+  category  String   @default("National")
+  title     String
+  content   String
+  source    String?
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
+model AttemptItem {
+  id               String   @id @default(cuid())
+  attempt          Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  attemptId        String
+  questionId       String
+  sectionCode      String
+  displayOrder     Int
+  selectedOptionId String?
+  markedForReview  Boolean  @default(false)
+  visited          Boolean  @default(false)
+  timeSpentSeconds Int      @default(0)
+
+  @@index([attemptId])
+}
