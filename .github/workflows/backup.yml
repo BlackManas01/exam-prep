@@ -27,6 +27,7 @@ jobs:
       - name: Export curated questions to JSON
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DATABASE_URL }}
         run: node scripts/export-ai-json.cjs
 
       - name: Upload backup artifact
