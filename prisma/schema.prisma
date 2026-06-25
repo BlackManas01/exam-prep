@@ -152,3 +152,17 @@ model AttemptItem {
 
   @@index([attemptId])
 }
+
+// Student "report this question" flags. One row per reported question; the
+// admin reviews these (Reported Questions page) and deletes or dismisses.
+// Stored in the DB (not a file) so it works on serverless hosts like Vercel.
+model QuestionFlag {
+  id         String   @id @default(cuid())
+  questionId String   @unique
+  reason     String?
+  count      Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([createdAt])
+}

@@ -1,10 +1,7 @@
-import { promises as fs } from "fs";
-import path from "path";
+import { prisma } from "@/lib/prisma";
 
-// Lightweight, file-based store for "report wrong answer" flags. Kept out of the
-// database so it never interferes with question generation / backups.
-
-const FILE = path.join(process.cwd(), "data", "flags.json");
+// Database-backed store for "report wrong answer" flags. Stored in Postgres so
+// it works on serverless hosts (Vercel) — a file-based store would be lost.
 
 export interface Flag {
   questionId: string;
@@ -13,32 +10,25 @@ export interface Flag {
 }
 
 export async function readFlags(): Promise<Flag[]> {
-  try {
-    const text = await fs.readFile(FILE, "utf8");
-    const data = JSON.parse(text);
-    return Array.isArray(data) ? data : [];
-  } catch {
-    return [];
-  }
-}
-
-async function writeFlags(flags: Flag[]): Promise<void> {
-  await fs.mkdir(path.dirname(FILE), { recursive: true });
-  await fs.writeFile(FILE, JSON.stringify(flags, null, 2));
+  const rows = await prisma.questionFlag.findMany({ orderBy: { createdAt: "desc" } });
+  return rows.map((f) => ({
+    questionId: f.questionId,
+    reason: f.reason ?? undefined,
+    at: f.createdAt.toISOString(),
+  }));
 }
 
 export async function addFlag(questionId: string, reason?: string): Promise<void> {
-  const flags = await readFlags();
-  const existing = flags.find((f) => f.questionId === questionId);
-  if (existing) {
-    if (reason) existing.reason = reason;
-  } else {
-    flags.push({ questionId, reason, at: new Date().toISOString() });
-  }
-  await writeFlags(flags);
+  await prisma.questionFlag.upsert({
+    where: { questionId },
+    create: { questionId, reason },
+    update: {
+      count: { increment: 1 },
+      ...(reason ? { reason } : {}),
+    },
+  });
 }
 
 export async function removeFlag(questionId: string): Promise<void> {
-  const flags = await readFlags();
-  await writeFlags(flags.filter((f) => f.questionId !== questionId));
+  await prisma.questionFlag.deleteMany({ where: { questionId } });
 }
