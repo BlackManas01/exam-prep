@@ -1,0 +1,46 @@
+name: Grow question bank (AI)
+
+# Automatically grows the curated GK / English / Computer / GS banks every day
+# using the free AI providers, in priority order (CGL Tier 2 first, then Tier 1,
+# then the other exams). Fully resumable — each run continues where the last
+# left off and stops cleanly when the daily AI quota is used up.
+#
+# Required repo secrets: DATABASE_URL (set), GEMINI_API_KEY. Optional: GROQ_API_KEY
+# (adds a free fallback provider for extra daily throughput).
+on:
+  schedule:
+    - cron: "0 2 * * *" # once a day at 02:00 UTC
+  workflow_dispatch:
+    inputs:
+      plan:
+        description: "Override PLAN (exam:section:cap,comma-separated)"
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: grow-question-bank
+  cancel-in-progress: false
+
+jobs:
+  grow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      PLAN: >-
+        ${{ github.event.inputs.plan ||
+        'ssc-cgl-tier2:general-awareness:10000,ssc-cgl-tier2:english:10000,ssc-cgl-tier2:computer:10000,ssc-cgl-tier1:general-awareness:10000,ssc-cgl-tier1:english:10000,ssc-chsl-tier1:general-awareness:10000,ssc-chsl-tier1:english:10000,rrb-ntpc-cbt1:general-awareness:10000,ibps-po-prelims:english:10000,upsc-prelims-gs1:general-studies:10000' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Generate questions (priority plan)
+        run: npx tsx scripts/grow-direct.mts

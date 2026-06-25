@@ -216,8 +216,7 @@ async function callGeminiResilient(params: GenerateParams, apiKey: string): Prom
     : new Error("Gemini generation failed after retries");
 }
 
-async function callLLM(params: GenerateParams): Promise<unknown[]> {
-  const provider = getProvider();
+async function callProvider(provider: Provider, params: GenerateParams): Promise<unknown[]> {
   if (provider === "gemini") {
     const key = process.env.GEMINI_API_KEY;
     if (!key)
@@ -251,6 +250,36 @@ async function callLLM(params: GenerateParams): Promise<unknown[]> {
     key,
     process.env.OPENAI_MODEL || "gpt-4o"
   );
+}
+
+// Ordered list of providers to try: the detected primary first, then any other
+// provider whose key is present. This lets generation automatically fall back
+// (e.g. Gemini → Groq) when the primary hits its free-tier quota.
+function providerChain(): Provider[] {
+  const has: Record<Provider, boolean> = {
+    gemini: !!process.env.GEMINI_API_KEY,
+    groq: !!process.env.GROQ_API_KEY,
+    openai: !!process.env.OPENAI_API_KEY,
+  };
+  const order: Provider[] = [getProvider(), "gemini", "groq", "openai"];
+  const chain: Provider[] = [];
+  for (const p of order) if (has[p] && !chain.includes(p)) chain.push(p);
+  return chain.length ? chain : [getProvider()];
+}
+
+async function callLLM(params: GenerateParams): Promise<unknown[]> {
+  const chain = providerChain();
+  let lastErr: unknown;
+  for (const provider of chain) {
+    try {
+      return await callProvider(provider, params);
+    } catch (e) {
+      lastErr = e;
+      // Fall through to the next available provider on any failure (quota,
+      // rate-limit, overload, or a bad response) — best-effort throughput.
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("All AI providers failed");
 }
 
 /**
