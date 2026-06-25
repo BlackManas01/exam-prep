@@ -137,11 +137,8 @@ export default function HomePage() {
       </section>
 
       <footer className="border-t border-slate-200 py-6 text-center text-xs text-slate-400">
-        Demo build — exam patterns modeled on official 2026 notifications. See
-        DESIGN.md for the full architecture. ·{" "}
-        <Link href="/admin" className="text-examblue hover:underline">
-          Admin
-        </Link>
+        ExamPrep — free mock tests &amp; practice for SSC, Banking, Railways &amp; UPSC
+        aspirants. Made for students. 💙
       </footer>
     </main>
   );
