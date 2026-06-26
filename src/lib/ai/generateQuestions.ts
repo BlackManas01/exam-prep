@@ -79,16 +79,17 @@ function buildMessages(p: GenerateParams) {
   const subj = p.subject.toLowerCase();
   const isEnglish = subj.includes("english");
   const englishTrap = `
-TRAP / TOPPER-CONFUSING ENGLISH (very important): These must be far harder than the usual exam — the kind that confuses even strong students, yet has exactly one defensible answer.
-- Vocabulary: use ADVANCED, less-common words (e.g. perfidious, obsequious, laconic, mendacious, parsimonious, gregarious, ingenuous). For synonyms/antonyms, make ONE distractor a sound-alike or a synonym-when-an-antonym-is-asked (the classic trap).
+TRAP / TOPPER-CONFUSING ENGLISH (very important): These must be BRUTAL — the hardest tier, the kind only English teachers and top rankers can solve, far above the usual exam, yet with exactly one defensible answer.
+- Vocabulary: use RARE, advanced words (e.g. pulchritude, sycophant, obfuscate, pusillanimous, ineluctable, mellifluous, perspicacious, insouciant, truculence). For synonyms/antonyms, make ONE distractor a sound-alike or a synonym-when-an-antonym-is-asked (the classic trap).
 - Grammar/error-spotting: target subtle rules — subject-verb agreement with "one of those who", "the number of", "neither", "each"; "senior/superior/prefer + to"; misplaced modifiers; parallelism; conditional/subjunctive ("if I had known").
 - Confusable pairs: complacent/complaisant, ingenuous/ingenious, prosecute/persecute, principal/principle, stationary/stationery, eminent/imminent.
 - Idioms: pick less-common idioms (bell the cat, Hobson's choice, carry coals to Newcastle) with a tempting literal-meaning distractor.
 - In the explanation, name the trap option and why it is wrong. Each question must test a DIFFERENT word/rule — never reuse the same word or pattern.`;
   const quantTrap = `
-TRAP / TOPPER-CONFUSING STYLE (very important): These must EXCEED the real exam's difficulty — the kind of question where even a topper gets confused on first read, yet the answer is 100% unambiguous and correct.
-- Require 3-5 reasoning steps, not one formula.
-- Engineer ONE distractor to be the classic "obvious but wrong" trap (e.g. 25% increase → 20% decrease; successive discounts that don't simply add; an average where one item is double-counted; net % change of +x% then −x%; capital×time partnerships; cyclicity/remainder traps; identity-based algebra/trig).
+TRAP / BRUTAL TOPPER-LEVEL STYLE (very important): These must be the HARDEST tier — the kind only teachers and top rankers can solve, far above the real exam, yet 100% unambiguous and correct.
+- Require 4-6 reasoning steps, often combining two concepts (e.g. algebra+trig, geometry+mensuration, number theory+remainders).
+- Favour: infinite GP, log identities, common-tangent geometry, CRT/cyclicity remainders, symmetric-function algebra, height-and-distance with two observers, recursive series.
+- Engineer ONE distractor to be the classic "obvious but wrong" trap.
 - Mention in the explanation WHICH option is the trap and WHY it is wrong.
 - Vary the concept every time — do NOT just change the numbers of a previous question. Each question must test a DIFFERENT twist.`;
   const trapBlock = isTrap ? (isEnglish ? englishTrap : quantTrap) : "";

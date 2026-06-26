@@ -13,14 +13,12 @@ import { generateAndStore } from "../src/lib/ai/generateQuestions";
 import { EXAM_BLUEPRINTS } from "../src/lib/examConfig";
 
 const perCall = Math.min(50, Number(process.env.COUNT) || 40);
-// Knowledge sections keep a gentle spread; quant/reasoning are multi-step only
-// (the trivial single-step EASY pool was removed), so they skip EASY and add
-// EXPERT to keep every generated question genuinely exam-level.
-const STEP_SECTIONS = new Set(["quant", "math", "maths", "reasoning", "general-intelligence", "english"]);
-function difficultiesFor(sectionCode: string): readonly string[] {
-  return STEP_SECTIONS.has(sectionCode)
-    ? ["MEDIUM", "HARD", "HARD", "EXPERT"]
-    : ["EASY", "MEDIUM", "HARD"];
+// Brutal-tier only: every section now generates EXPERT questions to fill the
+// Real Exam pool (which serves 100% EXPERT). Override with DIFFS env if needed.
+function difficultiesFor(_sectionCode: string): readonly string[] {
+  const env = process.env.DIFFS;
+  if (env) return env.split(",").map((d) => d.trim().toUpperCase());
+  return ["EXPERT"];
 }
 
 const TOPIC_WEIGHTS: Record<string, Record<string, number>> = {
