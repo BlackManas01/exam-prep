@@ -81,10 +81,11 @@ function numericOptions(correct: number, count: number): { options: string[]; co
 }
 
 function diffByMagnitude(n: number): Difficulty {
-  if (n < 50) return "EASY";
-  if (n < 300) return "MEDIUM";
-  if (n < 1000) return "HARD";
-  return "EXPERT";
+  // These procedural generators produce SINGLE-STEP questions, which are EASY to
+  // MEDIUM by nature — difficulty must reflect the number of reasoning steps, NOT
+  // how big the answer number is. (Genuinely HARD/EXPERT questions come from the
+  // curated multi-step PYQ set in scripts/add-hard-quant and AI generation.)
+  return n < 100 ? "EASY" : "MEDIUM";
 }
 
 // ---------------------------------------------------------------------------
