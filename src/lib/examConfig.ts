@@ -314,9 +314,11 @@ export const DIFFICULTY_DISTRIBUTION: Record<
   DifficultyLevelKey,
   { EASY: number; MEDIUM: number; HARD: number; EXPERT: number }
 > = {
-  REAL: { EASY: 0.25, MEDIUM: 0.45, HARD: 0.25, EXPERT: 0.05 },
-  SLIGHTLY_HARDER: { EASY: 0.15, MEDIUM: 0.4, HARD: 0.35, EXPERT: 0.1 },
-  TWO_X: { EASY: 0.05, MEDIUM: 0.25, HARD: 0.45, EXPERT: 0.25 },
+  // Calibrated to the REAL SSC CGL exam, where most questions are multi-step.
+  // The single-step procedural items live in EASY and are only a small slice.
+  REAL: { EASY: 0.15, MEDIUM: 0.25, HARD: 0.45, EXPERT: 0.15 },
+  SLIGHTLY_HARDER: { EASY: 0.05, MEDIUM: 0.2, HARD: 0.45, EXPERT: 0.3 },
+  TWO_X: { EASY: 0.0, MEDIUM: 0.1, HARD: 0.45, EXPERT: 0.45 },
 };
 
 export function getExamBlueprint(code: string): ExamBlueprint | undefined {
