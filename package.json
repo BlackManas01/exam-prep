@@ -18,8 +18,11 @@
     "db:backup:auto": "node scripts/auto-backup.mjs",
     "db:restore": "node scripts/restore.mjs",
     "db:check:auto": "node scripts/auto-check.mjs",
-    "ai:bulk": "node scripts/ai-bulk.mjs",
-    "ai:fill": "node scripts/ai-fill.mjs"
+    "db:check": "node scripts/check-manual.cjs",
+    "db:templates": "node scripts/tier1-templates.cjs",
+    "db:grow": "tsx scripts/grow-direct.mts",
+    "db:traps": "node scripts/add-tricky.cjs && node scripts/add-tricky-english.cjs && node scripts/add-tricky2.cjs && node scripts/add-tricky3.cjs && node scripts/add-tricky4.cjs && node scripts/add-tricky5.cjs && node scripts/add-tricky6.cjs && node scripts/add-tricky7.cjs",
+    "db:cap": "node scripts/cap-by-template.cjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
