@@ -68,7 +68,6 @@ const REASONING = [
   { t: "Mathematical Operations", d: "HARD", q: "If 5 $ 3 = 34, 7 $ 2 = 53 and 6 $ 4 = 52, then 8 $ 5 = ?", o: ["89", "80", "79", "84"], c: 0, e: "Pattern a² + b²: 8² + 5² = 64 + 25 = 89." },
   { t: "Letter Series", d: "MEDIUM", q: "Find the next term: B, D, G, K, ?", o: ["P", "O", "N", "Q"], c: 0, e: "Gaps +2, +3, +4, +5 → K(11) + 5 = 16 = P." },
   { t: "Syllogism", d: "HARD", q: "Statements: All A are B. Some B are C. Conclusions: I. Some A are C. II. Some C are B. Which conclusion(s) follow?", o: ["Only II follows", "Only I follows", "Both follow", "Neither follows"], c: 0, e: "'Some B are C' gives 'some C are B' (II). 'Some A are C' is not guaranteed." },
-  { t: "Mathematical Operations", d: "EXPERT", q: "If 1 = 5, 2 = 25, 3 = 125 and 4 = 625, then 5 = ?", o: ["1", "3125", "5", "25"], c: 0, e: "Trick: it is given that 1 = 5, so by reversal 5 = 1." },
   { t: "Coding-Decoding", d: "MEDIUM", q: "If 'CODE' is written as 'DPEF' (each letter +1), how is 'BYTE' written?", o: ["CZUF", "CYUF", "DZUF", "CZUG"], c: 0, e: "Each letter +1: B→C, Y→Z, T→U, E→F → CZUF." },
   { t: "Direction Sense", d: "HARD", q: "A man starts walking North. After 4 km he turns right and walks 3 km, then turns right and walks 4 km. How far and in which direction is he from the start?", o: ["3 km East", "3 km West", "5 km East", "4 km South"], c: 0, e: "North 4 and South 4 cancel; net 3 km East." },
 ];
