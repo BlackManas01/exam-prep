@@ -75,11 +75,21 @@ function buildMessages(p: GenerateParams) {
     "Always return STRICT JSON only, matching the requested schema. No markdown.",
   ].join(" ");
 
+  const isTrap = diff === "HARD" || diff === "EXPERT";
+  const trapBlock = isTrap
+    ? `
+TRAP / TOPPER-CONFUSING STYLE (very important): These must EXCEED the real exam's difficulty — the kind of question where even a topper gets confused on first read, yet the answer is 100% unambiguous and correct.
+- Require 3-5 reasoning steps, not one formula.
+- Engineer ONE distractor to be the classic "obvious but wrong" trap (e.g. 25% increase → 20% decrease; successive discounts that don't simply add; an average where one item is double-counted; net % change of +x% then −x%; capital×time partnerships; cyclicity/remainder traps; identity-based algebra/trig).
+- Mention in the explanation WHICH option is the trap and WHY it is wrong.
+- Vary the concept every time — do NOT just change the numbers of a previous question. Each question must test a DIFFERENT twist.`
+    : "";
+
   const user = `Generate ${p.count} unique single-correct MCQs for the "${p.examName}" exam, section "${p.sectionName}" (subject: ${p.subject})${topicLine}.
 Difficulty: ${diff}.
 CRITICAL — STAY ON SUBJECT: Every question MUST belong to the subject "${p.subject}". ${subjectGuard(p.subject)} Do NOT generate questions from any other subject.
 Base the questions on the official syllabus and the style/pattern of this exam's previous years' papers (last 5-10 years), covering frequently-asked topics.
-Make them EXAM-STANDARD and genuinely challenging — like the real exam, not easy. Use application/analytical questions, statement-based questions, and strong, plausible distractors so guessing is hard. Avoid trivial one-line recall.
+Make them EXAM-STANDARD and genuinely challenging — like the real exam, not easy. Use application/analytical questions, statement-based questions, and strong, plausible distractors so guessing is hard. Avoid trivial one-line recall.${trapBlock}
 Every fact and answer key MUST be accurate. Each question must have exactly ${p.optionsPerQuestion} options, exactly one correct, and a concise step-by-step or factual explanation.
 Avoid repeating questions and avoid ambiguous wording.
 
