@@ -315,9 +315,9 @@ export const DIFFICULTY_DISTRIBUTION: Record<
   { EASY: number; MEDIUM: number; HARD: number; EXPERT: number }
 > = {
   // Levels are escalated and EASY/MEDIUM are removed from quant/English/reasoning:
-  // every served question is genuinely HARD or EXPERT. REAL is half-EXPERT,
-  // SLIGHTLY_HARDER is mostly EXPERT, and TWO_X is 100% EXPERT/extreme.
-  REAL: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.5, EXPERT: 0.5 },
+  // every served question is genuinely HARD or EXPERT. REAL is now 100% EXPERT
+  // (per request) — the default test is entirely extreme/topper-level.
+  REAL: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.0, EXPERT: 1.0 },
   SLIGHTLY_HARDER: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.25, EXPERT: 0.75 },
   TWO_X: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.0, EXPERT: 1.0 },
 };
