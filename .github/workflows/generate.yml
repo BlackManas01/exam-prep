@@ -9,12 +9,10 @@ name: Grow question bank (AI)
 # (adds a free fallback provider for extra daily throughput).
 on:
   schedule:
-    # GitHub's scheduled runs are best-effort and often delayed/dropped at the
-    # top of the hour, so we use odd, off-peak minutes and two daily attempts
-    # for reliability. The second run exits in minutes if the daily AI quota is
-    # already spent, so it costs almost nothing.
-    - cron: "23 4 * * *" # ~04:23 UTC
-    - cron: "37 13 * * *" # ~13:37 UTC (catch-up if the morning run was dropped)
+    # Times chosen in IST (UTC+5:30), with odd minutes for scheduler reliability.
+    - cron: "31 23 * * *" # 23:31 UTC = ~5:00 AM IST  (main run)
+    - cron: "31 14 * * *" # 14:31 UTC = ~8:00 PM IST  (evening run — only adds more
+    #                       if the daily AI quota isn't already used up)
   workflow_dispatch:
     inputs:
       plan:

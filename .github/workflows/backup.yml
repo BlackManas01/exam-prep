@@ -4,7 +4,7 @@ name: Backup question bank
 # downloadable artifact — zero manual effort. Also runnable on demand.
 on:
   schedule:
-    - cron: "19 2 * * *" # ~02:19 UTC (odd minute = more reliable than the hour mark)
+    - cron: "33 16 * * *" # 16:33 UTC = ~10:00 PM IST (after both daily generation runs)
   workflow_dispatch: {}
 
 jobs:
