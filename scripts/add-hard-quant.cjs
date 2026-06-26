@@ -18,6 +18,9 @@ const TARGETS = [
   { examCode: "rrb-ntpc-cbt1", sectionCode: "maths", subject: "Mathematics" },
   { examCode: "ssc-cgl-tier2", sectionCode: "math", subject: "Quantitative Aptitude" },
 ];
+// EXAM=ssc-cgl-tier1 restricts generation to one exam (focus mode).
+const ONLY = process.env.EXAM;
+const ACTIVE = ONLY ? TARGETS.filter((t) => t.examCode === ONLY) : TARGETS;
 
 // ---- helpers ----
 const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -390,7 +393,7 @@ const ALL_GENERATORS = [...GENERATORS, ...EXPERT_GENERATORS];
   }
   // Preload existing hashes per target section to skip duplicates.
   const existing = {};
-  for (const t of TARGETS) {
+  for (const t of ACTIVE) {
     const rows = await prisma.question.findMany({
       where: { examCode: t.examCode, sectionCode: t.sectionCode },
       select: { contentHash: true },
@@ -403,7 +406,7 @@ const ALL_GENERATORS = [...GENERATORS, ...EXPERT_GENERATORS];
   const oRows = [];
   while (qRows.length < COUNT && attempts < COUNT * 10) {
     attempts++;
-    const t = pick(TARGETS);
+    const t = pick(ACTIVE);
     const gen = pick(ALL_GENERATORS)();
     const correct = gen.options[gen.correctIndex];
     const hash = contentHash(gen.stem, correct);
@@ -428,6 +431,6 @@ const ALL_GENERATORS = [...GENERATORS, ...EXPERT_GENERATORS];
   await chunk(qRows, 1000, (b) => prisma.question.createMany({ data: b, skipDuplicates: true }));
   await chunk(oRows, 2000, (b) => prisma.option.createMany({ data: b, skipDuplicates: true }));
   added = qRows.length;
-  console.log(`\nAdded ${added} hard/expert PYQ quant questions across ${TARGETS.length} exams (attempts ${attempts}).`);
+  console.log(`\nAdded ${added} hard/expert PYQ quant questions across ${ACTIVE.length} exams (attempts ${attempts}).`);
   await prisma.$disconnect();
 })().catch(async (e) => { console.error(e); await prisma.$disconnect(); process.exit(1); });

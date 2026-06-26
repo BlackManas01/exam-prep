@@ -18,6 +18,9 @@ const TARGETS = [
   { examCode: "rrb-ntpc-cbt1", sectionCode: "reasoning", subject: "General Intelligence & Reasoning" },
   { examCode: "ssc-cgl-tier2", sectionCode: "reasoning", subject: "Reasoning & General Intelligence" },
 ];
+// EXAM=ssc-cgl-tier1 restricts generation to one exam (focus mode).
+const ONLY = process.env.EXAM;
+const ACTIVE = ONLY ? TARGETS.filter((t) => t.examCode === ONLY) : TARGETS;
 
 const randInt = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -208,7 +211,7 @@ const GENERATORS = [gDirection, gCoding, gSeries, gMathOp, gClock, gCalendar, gR
   }
 
   const existing = {};
-  for (const t of TARGETS) {
+  for (const t of ACTIVE) {
     const rows = await prisma.question.findMany({ where: { examCode: t.examCode, sectionCode: t.sectionCode }, select: { contentHash: true } });
     existing[t.examCode + t.sectionCode] = new Set(rows.map((r) => r.contentHash));
   }
@@ -216,7 +219,7 @@ const GENERATORS = [gDirection, gCoding, gSeries, gMathOp, gClock, gCalendar, gR
   let attempts = 0;
   while (qRows.length < COUNT && attempts < COUNT * 12) {
     attempts++;
-    const t = pick(TARGETS);
+    const t = pick(ACTIVE);
     const gen = pick(GENERATORS)();
     const correct = gen.options[gen.correctIndex];
     const hash = contentHash(gen.stem, correct);
@@ -230,6 +233,6 @@ const GENERATORS = [gDirection, gCoding, gSeries, gMathOp, gClock, gCalendar, gR
   const chunk = async (arr, size, fn) => { for (let i = 0; i < arr.length; i += size) await fn(arr.slice(i, i + size)); };
   await chunk(qRows, 1000, (b) => prisma.question.createMany({ data: b, skipDuplicates: true }));
   await chunk(oRows, 2000, (b) => prisma.option.createMany({ data: b, skipDuplicates: true }));
-  console.log(`\nAdded ${qRows.length} hard reasoning questions across ${TARGETS.length} exams (attempts ${attempts}).`);
+  console.log(`\nAdded ${qRows.length} hard reasoning questions across ${ACTIVE.length} exams (attempts ${attempts}).`);
   await prisma.$disconnect();
 })().catch(async (e) => { console.error(e); await prisma.$disconnect(); process.exit(1); });
