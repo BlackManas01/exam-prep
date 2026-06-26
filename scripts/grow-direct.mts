@@ -86,6 +86,7 @@ async function growSection(examCode: string, sectionCode: string, target: number
   let qi = 0;
   let backoff = 3500;
   let consecFail = 0;
+  let consecEmpty = 0;
 
   while (total < target) {
     const topic = queue[qi % queue.length] || undefined;
@@ -107,8 +108,15 @@ async function growSection(examCode: string, sectionCode: string, target: number
         });
         total += r.inserted;
         consecFail = 0;
+        // Track "all duplicates" batches so we don't loop forever once a
+        // section's unique pool is effectively exhausted.
+        consecEmpty = r.inserted === 0 ? consecEmpty + 1 : 0;
         backoff = Math.max(3000, Math.floor(backoff * 0.9));
         console.log(`  +${r.inserted} (total ${total}/${target}) [${topic ?? "-"} · ${difficulty}]`);
+        if (consecEmpty >= 12) {
+          console.log(`  ⓘ ${examCode}/${sectionCode}: no new unique questions for a while — moving on.`);
+          return false;
+        }
         await sleep(backoff);
       } catch (e) {
         consecFail++;
