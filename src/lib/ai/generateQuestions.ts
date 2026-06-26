@@ -27,6 +27,8 @@ export interface GenerateParams {
   optionsPerQuestion: number;
   /** Make questions immediately usable in tests (default true). */
   activate?: boolean;
+  /** Cross-check each answer with a second independent AI solve (for math). */
+  verify?: boolean;
 }
 
 export interface GenerateResult {
@@ -282,6 +284,48 @@ async function callLLM(params: GenerateParams): Promise<unknown[]> {
   throw lastErr instanceof Error ? lastErr : new Error("All AI providers failed");
 }
 
+// Raw text completion (not JSON) — used by the independent answer-verifier.
+async function chatRaw(provider: Provider, system: string, user: string): Promise<string> {
+  if (provider === "gemini") {
+    const key = process.env.GEMINI_API_KEY!;
+    const model = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: `${system}\n\n${user}` }] }], generationConfig: { temperature: 0 } }) }
+    );
+    if (!res.ok) throw new Error(`Gemini verify failed (${res.status})`);
+    const d = await res.json();
+    return d?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  }
+  const [baseUrl, key, model] =
+    provider === "groq"
+      ? ["https://api.groq.com/openai/v1", process.env.GROQ_API_KEY!, process.env.GROQ_MODEL || "llama-3.3-70b-versatile"]
+      : ["https://api.openai.com/v1", process.env.OPENAI_API_KEY!, process.env.OPENAI_MODEL || "gpt-4o"];
+  const res = await fetch(`${baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+    body: JSON.stringify({ model, temperature: 0, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
+  });
+  if (!res.ok) throw new Error(`Verify failed (${res.status})`);
+  const d = await res.json();
+  return d?.choices?.[0]?.message?.content ?? "";
+}
+
+// Asks a DIFFERENT provider to solve the MCQ independently; returns the option
+// index it chose, or -1 if unclear. Used to cross-check generated answers.
+async function solveIndependently(stem: string, options: string[]): Promise<number> {
+  const chain = providerChain();
+  // Prefer a provider different from the generator's primary, for a true 2nd opinion.
+  const verifier = chain.find((p) => p !== chain[0]) ?? chain[0];
+  const letters = options.map((o, i) => `${String.fromCharCode(65 + i)}. ${o}`).join("\n");
+  const system =
+    "You are an expert who solves Indian government-exam MCQs (SSC/Banking/Railways). Solve the problem carefully and reply with ONLY the single letter (A, B, C or D) of the correct option — no working, no extra text.";
+  const user = `${stem}\n${letters}`;
+  const text = await chatRaw(verifier, system, user);
+  const m = text.trim().toUpperCase().match(/\b([A-D])\b/);
+  return m ? m[1].charCodeAt(0) - 65 : -1;
+}
+
 /**
  * Generate a batch of questions and store the valid, non-duplicate ones as
  * inactive AI questions for review.
@@ -315,7 +359,25 @@ export async function generateAndStore(params: GenerateParams): Promise<Generate
     select: { contentHash: true },
   });
   const existingHashes = new Set(existing.map((e) => e.contentHash));
-  const fresh = candidates.filter((c) => !existingHashes.has(c.hash));
+  let fresh = candidates.filter((c) => !existingHashes.has(c.hash));
+
+  // Cross-verify answers with an independent AI solve (for math-heavy subjects).
+  // Keep only questions where the second opinion agrees with the stated answer —
+  // this filters out AI arithmetic/logic mistakes. Auto-on for quant/reasoning.
+  const needsVerify =
+    params.verify ?? /quant|math|aptitude|numerical|reasoning|intelligence/i.test(params.subject);
+  if (needsVerify && fresh.length > 0) {
+    const checked: typeof fresh = [];
+    for (const c of fresh) {
+      try {
+        const idx = await solveIndependently(c.q.stem, c.q.options);
+        if (idx === c.q.correctIndex) checked.push(c);
+      } catch {
+        // If verification call fails, drop the question (safer than keeping it).
+      }
+    }
+    fresh = checked;
+  }
 
   // Insert as inactive (pending review)
   const questionRows = fresh.map(({ q, hash }) => ({
