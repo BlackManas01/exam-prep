@@ -292,17 +292,17 @@ export const DIFFICULTY_LEVELS = [
   {
     key: "REAL",
     label: "Real Exam Level",
-    description: "Mirrors the actual exam difficulty distribution.",
+    description: "Tough, exam-plus level — predominantly hard, multi-step questions.",
   },
   {
     key: "SLIGHTLY_HARDER",
     label: "Slightly Harder",
-    description: "A notch above the real exam to build a buffer.",
+    description: "Expert-heavy — well above the real exam.",
   },
   {
     key: "TWO_X",
-    label: "2x Harder",
-    description: "Significantly tougher questions for advanced practice.",
+    label: "Extremely Hard",
+    description: "Topper level — almost entirely expert / extreme questions.",
   },
 ] as const;
 
@@ -314,12 +314,12 @@ export const DIFFICULTY_DISTRIBUTION: Record<
   DifficultyLevelKey,
   { EASY: number; MEDIUM: number; HARD: number; EXPERT: number }
 > = {
-  // Calibrated to the REAL SSC CGL exam: every question is multi-step.
-  // EASY is 0 — the single-step trivial pool has been removed entirely.
-  // REAL = tricky (HARD-dominant); SLIGHTLY_HARDER = half EXPERT; TWO_X = hardest.
-  REAL: { EASY: 0.0, MEDIUM: 0.25, HARD: 0.55, EXPERT: 0.2 },
-  SLIGHTLY_HARDER: { EASY: 0.0, MEDIUM: 0.1, HARD: 0.45, EXPERT: 0.45 },
-  TWO_X: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.3, EXPERT: 0.7 },
+  // Levels are escalated: REAL is already tough (mostly HARD = "2x"),
+  // SLIGHTLY_HARDER is EXPERT-heavy ("4x"), and TWO_X is almost all
+  // EXPERT/extreme ("8x") where the topper-level questions live.
+  REAL: { EASY: 0.0, MEDIUM: 0.15, HARD: 0.7, EXPERT: 0.15 },
+  SLIGHTLY_HARDER: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.4, EXPERT: 0.6 },
+  TWO_X: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.1, EXPERT: 0.9 },
 };
 
 export function getExamBlueprint(code: string): ExamBlueprint | undefined {
