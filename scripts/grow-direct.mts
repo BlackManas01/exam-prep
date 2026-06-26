@@ -16,7 +16,7 @@ const perCall = Math.min(50, Number(process.env.COUNT) || 40);
 // Knowledge sections keep a gentle spread; quant/reasoning are multi-step only
 // (the trivial single-step EASY pool was removed), so they skip EASY and add
 // EXPERT to keep every generated question genuinely exam-level.
-const STEP_SECTIONS = new Set(["quant", "math", "maths", "reasoning", "general-intelligence"]);
+const STEP_SECTIONS = new Set(["quant", "math", "maths", "reasoning", "general-intelligence", "english"]);
 function difficultiesFor(sectionCode: string): readonly string[] {
   return STEP_SECTIONS.has(sectionCode)
     ? ["MEDIUM", "HARD", "HARD", "EXPERT"]

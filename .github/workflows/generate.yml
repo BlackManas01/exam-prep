@@ -37,7 +37,7 @@ jobs:
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       PLAN: >-
         ${{ github.event.inputs.plan ||
-        'ssc-cgl-tier1:quant:1200,ssc-cgl-tier1:reasoning:1200,ssc-cgl-tier2:math:1000,ssc-cgl-tier2:reasoning:1000,ibps-po-prelims:quant:1000,ibps-po-prelims:reasoning:1000,rrb-ntpc-cbt1:maths:1000,rrb-ntpc-cbt1:reasoning:1000,ssc-chsl-tier1:quant:1000,ssc-chsl-tier1:general-intelligence:1000,ssc-cgl-tier2:computer:1000,ssc-cgl-tier1:general-awareness:1000,ssc-cgl-tier1:english:1000,upsc-prelims-gs1:general-studies:1000' }}
+        'ssc-cgl-tier1:quant:1500,ssc-cgl-tier1:reasoning:1500,ssc-cgl-tier1:english:1500,ssc-cgl-tier1:general-awareness:1200,ssc-cgl-tier2:math:1000,ssc-cgl-tier2:reasoning:1000,ssc-cgl-tier2:english:800,ibps-po-prelims:quant:1000,ibps-po-prelims:reasoning:1000,ibps-po-prelims:english:800,rrb-ntpc-cbt1:maths:1000,rrb-ntpc-cbt1:reasoning:1000,ssc-chsl-tier1:quant:1000,ssc-chsl-tier1:general-intelligence:1000,ssc-chsl-tier1:english:800,ssc-cgl-tier2:computer:1000,upsc-prelims-gs1:general-studies:1000' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
