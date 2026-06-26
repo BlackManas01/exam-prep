@@ -23,6 +23,50 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+/**
+ * Reduce a question stem to a "pattern signature": numbers, single capitals and
+ * ALL-CAPS tokens are masked so that two procedurally-generated clones (same
+ * wording, different numbers) collapse to the same signature. Used to guarantee
+ * a single test never shows the same pattern twice.
+ */
+function templateSig(stem: string): string {
+  return stem
+    .replace(/₹?\d[\d.,/:]*/g, "#")
+    .replace(/\b[A-Z]\b/g, "@")
+    .replace(/[A-Z]{2,}/g, "@")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 70);
+}
+
+/**
+ * Order question ids round-robin across their template signatures so the first
+ * picks are maximally pattern-diverse (one per distinct wording before any
+ * wording repeats).
+ */
+function diversifyByTemplate(items: { id: string; tmpl: string }[]): string[] {
+  const groups = new Map<string, string[]>();
+  for (const it of shuffle(items)) {
+    const g = groups.get(it.tmpl);
+    if (g) g.push(it.id);
+    else groups.set(it.tmpl, [it.id]);
+  }
+  const buckets = shuffle([...groups.values()]);
+  const out: string[] = [];
+  let added = true;
+  while (added) {
+    added = false;
+    for (const b of buckets) {
+      const v = b.shift();
+      if (v !== undefined) {
+        out.push(v);
+        added = true;
+      }
+    }
+  }
+  return out;
+}
+
 /** Split a section's question count across difficulties per the chosen level. */
 function difficultyCounts(total: number, level: DifficultyLevelKey): Record<Diff, number> {
   const dist = DIFFICULTY_DISTRIBUTION[level];
@@ -97,36 +141,74 @@ async function pickSectionQuestionIds(
       // Topic-wise practice: drill a single topic (e.g. only Compound Interest).
       ...(topic ? { topic } : {}),
     },
-    select: { id: true, difficulty: true },
+    select: { id: true, difficulty: true, stem: true },
   });
 
+  const tmplOf = new Map<string, string>();
+  for (const q of questions) tmplOf.set(q.id, templateSig(q.stem));
+
+  // Diversified queue per difficulty (round-robin across distinct patterns).
+  const grouped: Record<Diff, { id: string; tmpl: string }[]> = {
+    EASY: [], MEDIUM: [], HARD: [], EXPERT: [],
+  };
+  for (const q of questions)
+    grouped[q.difficulty as Diff].push({ id: q.id, tmpl: tmplOf.get(q.id)! });
   const byDiff: Record<Diff, string[]> = { EASY: [], MEDIUM: [], HARD: [], EXPERT: [] };
-  for (const q of questions) byDiff[q.difficulty as Diff].push(q.id);
-  for (const d of DIFFS) byDiff[d] = shuffle(byDiff[d]);
+  for (const d of DIFFS) byDiff[d] = diversifyByTemplate(grouped[d]);
 
   const need = difficultyCounts(count, level);
   const chosen: string[] = [];
   const used = new Set<string>();
+  const usedTmpl = new Set<string>();
 
-  // Primary pass: take from each difficulty bucket.
+  // Primary pass: take from each difficulty bucket, never repeating a pattern
+  // while a fresh one is still available.
   for (const d of DIFFS) {
+    const queue = byDiff[d];
+    const deferred: string[] = [];
     let take = need[d];
-    while (take > 0 && byDiff[d].length > 0) {
-      const id = byDiff[d].pop()!;
-      if (!used.has(id)) {
-        used.add(id);
-        chosen.push(id);
-        take--;
+    while (take > 0 && queue.length > 0) {
+      const id = queue.shift()!;
+      if (used.has(id)) continue;
+      const t = tmplOf.get(id)!;
+      if (usedTmpl.has(t)) {
+        deferred.push(id);
+        continue;
       }
+      used.add(id);
+      usedTmpl.add(t);
+      chosen.push(id);
+      take--;
+    }
+    // Only reuse a pattern if we genuinely ran out of distinct ones.
+    while (take > 0 && deferred.length > 0) {
+      const id = deferred.shift()!;
+      if (used.has(id)) continue;
+      used.add(id);
+      chosen.push(id);
+      take--;
     }
     need[d] = take;
   }
 
-  // Borrow pass: fill leftover demand from any remaining unused question.
-  const remainingPool = shuffle(questions.map((q) => q.id).filter((id) => !used.has(id)));
+  // Borrow pass: fill leftover demand, still preferring unseen patterns.
+  const remaining = shuffle(questions.map((q) => q.id).filter((id) => !used.has(id)));
+  const borrowDeferred: string[] = [];
   let deficit = count - chosen.length;
-  while (deficit > 0 && remainingPool.length > 0) {
-    const id = remainingPool.pop()!;
+  for (const id of remaining) {
+    if (deficit <= 0) break;
+    const t = tmplOf.get(id)!;
+    if (usedTmpl.has(t)) {
+      borrowDeferred.push(id);
+      continue;
+    }
+    used.add(id);
+    usedTmpl.add(t);
+    chosen.push(id);
+    deficit--;
+  }
+  while (deficit > 0 && borrowDeferred.length > 0) {
+    const id = borrowDeferred.shift()!;
     used.add(id);
     chosen.push(id);
     deficit--;

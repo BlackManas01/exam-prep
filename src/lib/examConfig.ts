@@ -314,11 +314,11 @@ export const DIFFICULTY_DISTRIBUTION: Record<
   DifficultyLevelKey,
   { EASY: number; MEDIUM: number; HARD: number; EXPERT: number }
 > = {
-  // Calibrated to the REAL SSC CGL exam, where most questions are multi-step.
-  // The single-step procedural items live in EASY and are only a small slice.
-  REAL: { EASY: 0.15, MEDIUM: 0.25, HARD: 0.45, EXPERT: 0.15 },
-  SLIGHTLY_HARDER: { EASY: 0.05, MEDIUM: 0.2, HARD: 0.45, EXPERT: 0.3 },
-  TWO_X: { EASY: 0.0, MEDIUM: 0.1, HARD: 0.45, EXPERT: 0.45 },
+  // Calibrated to the REAL SSC CGL exam: every question is multi-step.
+  // EASY is 0 — the single-step trivial pool has been removed entirely.
+  REAL: { EASY: 0.0, MEDIUM: 0.3, HARD: 0.5, EXPERT: 0.2 },
+  SLIGHTLY_HARDER: { EASY: 0.0, MEDIUM: 0.15, HARD: 0.5, EXPERT: 0.35 },
+  TWO_X: { EASY: 0.0, MEDIUM: 0.05, HARD: 0.45, EXPERT: 0.5 },
 };
 
 export function getExamBlueprint(code: string): ExamBlueprint | undefined {
