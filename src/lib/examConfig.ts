@@ -315,11 +315,11 @@ export const DIFFICULTY_DISTRIBUTION: Record<
   { EASY: number; MEDIUM: number; HARD: number; EXPERT: number }
 > = {
   // Levels are escalated and EASY/MEDIUM are removed from quant/English/reasoning:
-  // every served question is genuinely HARD or EXPERT. REAL is HARD-heavy ("2x"),
-  // SLIGHTLY_HARDER is EXPERT-heavy ("4x"), TWO_X is almost all EXPERT/extreme ("8x").
-  REAL: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.75, EXPERT: 0.25 },
-  SLIGHTLY_HARDER: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.4, EXPERT: 0.6 },
-  TWO_X: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.1, EXPERT: 0.9 },
+  // every served question is genuinely HARD or EXPERT. REAL is half-EXPERT,
+  // SLIGHTLY_HARDER is mostly EXPERT, and TWO_X is 100% EXPERT/extreme.
+  REAL: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.5, EXPERT: 0.5 },
+  SLIGHTLY_HARDER: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.25, EXPERT: 0.75 },
+  TWO_X: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.0, EXPERT: 1.0 },
 };
 
 export function getExamBlueprint(code: string): ExamBlueprint | undefined {
