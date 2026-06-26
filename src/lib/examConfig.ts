@@ -314,10 +314,10 @@ export const DIFFICULTY_DISTRIBUTION: Record<
   DifficultyLevelKey,
   { EASY: number; MEDIUM: number; HARD: number; EXPERT: number }
 > = {
-  // Levels are escalated: REAL is already tough (mostly HARD = "2x"),
-  // SLIGHTLY_HARDER is EXPERT-heavy ("4x"), and TWO_X is almost all
-  // EXPERT/extreme ("8x") where the topper-level questions live.
-  REAL: { EASY: 0.0, MEDIUM: 0.15, HARD: 0.7, EXPERT: 0.15 },
+  // Levels are escalated and EASY/MEDIUM are removed from quant/English/reasoning:
+  // every served question is genuinely HARD or EXPERT. REAL is HARD-heavy ("2x"),
+  // SLIGHTLY_HARDER is EXPERT-heavy ("4x"), TWO_X is almost all EXPERT/extreme ("8x").
+  REAL: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.75, EXPERT: 0.25 },
   SLIGHTLY_HARDER: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.4, EXPERT: 0.6 },
   TWO_X: { EASY: 0.0, MEDIUM: 0.0, HARD: 0.1, EXPERT: 0.9 },
 };
