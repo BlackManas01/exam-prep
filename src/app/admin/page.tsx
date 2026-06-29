@@ -259,6 +259,13 @@ export default function AdminPage() {
             </Link>
 
             <Link
+              href="/admin/pipeline"
+              className="block rounded-lg border border-slate-300 px-4 py-2.5 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50"
+            >
+              🆕 Pipeline — recently added
+            </Link>
+
+            <Link
               href="/admin/flags"
               className="block rounded-lg border border-slate-300 px-4 py-2.5 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50"
             >
