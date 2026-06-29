@@ -179,6 +179,7 @@ async function callOpenAICompatible(
       response_format: { type: "json_object" },
       temperature: 0.8,
     }),
+    signal: AbortSignal.timeout(40000),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -206,6 +207,7 @@ async function callGemini(
         contents: [{ role: "user", parts: [{ text: `${system.content}\n\n${user.content}` }] }],
         generationConfig: { temperature: 0.8, responseMimeType: "application/json" },
       }),
+      signal: AbortSignal.timeout(40000),
     }
   );
   if (!res.ok) {
@@ -300,8 +302,13 @@ function providerChain(): Provider[] {
   const order: Provider[] = [getProvider(), "gemini", "groq", "openai"];
   const chain: Provider[] = [];
   for (const p of order) if (has[p] && !chain.includes(p)) chain.push(p);
-  return chain.length ? chain : [getProvider()];
+  const c = chain.length ? chain : [getProvider()];
+  // Round-robin the starting provider each call so different models contribute
+  // different questions (beats one model's duplicate-saturation ceiling).
+  const off = rrIndex++ % c.length;
+  return [...c.slice(off), ...c.slice(0, off)];
 }
+let rrIndex = 0;
 
 async function callLLM(params: GenerateParams): Promise<unknown[]> {
   const chain = providerChain();
@@ -325,7 +332,7 @@ async function chatRaw(provider: Provider, system: string, user: string): Promis
     const model = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: `${system}\n\n${user}` }] }], generationConfig: { temperature: 0 } }) }
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: `${system}\n\n${user}` }] }], generationConfig: { temperature: 0 } }), signal: AbortSignal.timeout(30000) }
     );
     if (!res.ok) throw new Error(`Gemini verify failed (${res.status})`);
     const d = await res.json();
@@ -339,6 +346,7 @@ async function chatRaw(provider: Provider, system: string, user: string): Promis
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({ model, temperature: 0, messages: [{ role: "system", content: system }, { role: "user", content: user }] }),
+    signal: AbortSignal.timeout(30000),
   });
   if (!res.ok) throw new Error(`Verify failed (${res.status})`);
   const d = await res.json();
