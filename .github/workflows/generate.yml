@@ -38,7 +38,7 @@ jobs:
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       PLAN: >-
         ${{ github.event.inputs.plan ||
-        'ssc-cgl-tier1:english:1000,ssc-cgl-tier1:reasoning:150,ssc-cgl-tier1:quant:300' }}
+        'ssc-cgl-tier1:general-awareness:2000,ssc-cgl-tier1:english:300,ssc-cgl-tier1:quant:100' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
