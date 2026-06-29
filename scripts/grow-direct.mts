@@ -86,6 +86,7 @@ function topicQueue(sectionCode: string): string[] {
     : Object.entries(TOPIC_WEIGHTS[sectionCode] ?? { "": 1 });
   const q: string[] = [];
   for (const [n, w] of entries) for (let i = 0; i < w; i++) q.push(n);
+  for (let i = q.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [q[i], q[j]] = [q[j], q[i]]; }
   return q;
 }
 
@@ -135,7 +136,7 @@ async function growSection(examCode: string, sectionCode: string, target: number
         // section's unique pool is effectively exhausted.
         consecEmpty = r.inserted === 0 ? consecEmpty + 1 : 0;
         backoff = Math.max(3000, Math.floor(backoff * 0.9));
-        console.log(`  +${r.inserted} (total ${total}/${target}) [${topic ?? "-"} · ${difficulty}]`);
+        console.log(`  +${r.inserted} (total ${total}/${target}) [${topic ?? "-"} · ${difficulty}] (ret ${r.returned}, valid ${r.valid}, dup ${r.duplicates}, ver-drop ${r.valid - r.duplicates - r.inserted})`);
         if (consecEmpty >= 12) {
           console.log(`  ⓘ ${examCode}/${sectionCode}: no new unique questions for a while — moving on.`);
           return false;

@@ -94,11 +94,26 @@ TRAP / BRUTAL TOPPER-LEVEL STYLE (very important): These must be the HARDEST tie
 - Vary the concept every time — do NOT just change the numbers of a previous question. Each question must test a DIFFERENT twist.`;
   const trapBlock = isTrap ? (isEnglish ? englishTrap : quantTrap) : "";
 
+  const isReasoning = subj.includes("reasoning") || subj.includes("intelligence");
+  const reasoningTrap = isTrap && isReasoning ? `
+TRAP / BRUTAL TOPPER-LEVEL REASONING (very important): hardest tier, only top rankers solve, yet exactly one defensible answer.
+- Multi-step: coding-decoding with 2-3 layered rules, 3-statement syllogisms, double-line-up/conditional seating, mixed number-letter series, two-variable blood relations.
+- Engineer ONE "obvious but wrong" distractor; name it in the explanation.
+- VARY THE SURFACE every time: invent fresh names, letters, numbers, scenarios — never reuse a known textbook puzzle.` : "";
+
+  // Novelty seed: random tokens force distinct surface features each call so the
+  // model stops converging on the same canonical questions (kills duplicate saturation).
+  const seed = Math.random().toString(36).slice(2, 8).toUpperCase();
+  const names = ["Anaya","Vikram","Ishaan","Meera","Rohan","Tara","Dev","Kavya","Arjun","Nisha"];
+  const pick = names[Math.floor(Math.random() * names.length)];
+  const noveltySeed = `\nNOVELTY SEED ${seed}: make this batch DIFFERENT from any standard set — use unusual names like "${pick}", uncommon number/letter combos, and fresh scenarios. Do NOT reproduce common textbook questions.`;
+
+
   const user = `Generate ${p.count} unique single-correct MCQs for the "${p.examName}" exam, section "${p.sectionName}" (subject: ${p.subject})${topicLine}.
 Difficulty: ${diff}.
 CRITICAL — STAY ON SUBJECT: Every question MUST belong to the subject "${p.subject}". ${subjectGuard(p.subject)} Do NOT generate questions from any other subject.
 Base the questions on the official syllabus and the style/pattern of this exam's previous years' papers (last 5-10 years), covering frequently-asked topics.
-Make them EXAM-STANDARD and genuinely challenging — like the real exam, not easy. Use application/analytical questions, statement-based questions, and strong, plausible distractors so guessing is hard. Avoid trivial one-line recall.${trapBlock}
+Make them EXAM-STANDARD and genuinely challenging — like the real exam, not easy. Use application/analytical questions, statement-based questions, and strong, plausible distractors so guessing is hard. Avoid trivial one-line recall.${trapBlock}${reasoningTrap}${noveltySeed}
 Every fact and answer key MUST be accurate. Each question must have exactly ${p.optionsPerQuestion} options, exactly one correct, and a concise step-by-step or factual explanation.
 Avoid repeating questions and avoid ambiguous wording.
 
