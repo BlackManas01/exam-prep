@@ -35,9 +35,10 @@ jobs:
       DIRECT_URL: ${{ secrets.DATABASE_URL }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       PLAN: >-
         ${{ github.event.inputs.plan ||
-        'ssc-cgl-tier1:english:600,ssc-cgl-tier1:reasoning:500,ssc-cgl-tier1:quant:300' }}
+        'ssc-cgl-tier1:english:1000,ssc-cgl-tier1:reasoning:150,ssc-cgl-tier1:quant:300' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
