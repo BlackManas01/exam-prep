@@ -137,14 +137,15 @@ Return JSON of this exact shape:
   ];
 }
 
-type Provider = "openai" | "gemini" | "groq";
+type Provider = "openai" | "gemini" | "groq" | "openrouter";
 
 function getProvider(): Provider {
   const p = (process.env.AI_PROVIDER || "").toLowerCase();
-  if (p === "openai" || p === "gemini" || p === "groq") return p;
+  if (p === "openai" || p === "gemini" || p === "groq" || p === "openrouter") return p;
   // Auto-detect: prefer a free provider if its key is present.
   if (process.env.GEMINI_API_KEY) return "gemini";
   if (process.env.GROQ_API_KEY) return "groq";
+  if (process.env.OPENROUTER_API_KEY) return "openrouter";
   return "openai";
 }
 
@@ -276,6 +277,19 @@ async function callProvider(provider: Provider, params: GenerateParams): Promise
       process.env.GROQ_MODEL || "llama-3.3-70b-versatile"
     );
   }
+  if (provider === "openrouter") {
+    const key = process.env.OPENROUTER_API_KEY;
+    if (!key)
+      throw new Error(
+        "OPENROUTER_API_KEY is not set. Get a FREE key at https://openrouter.ai/keys"
+      );
+    return callOpenAICompatible(
+      params,
+      "https://openrouter.ai/api/v1",
+      key,
+      process.env.OPENROUTER_MODEL || "deepseek/deepseek-chat-v3-0324:free"
+    );
+  }
   const key = process.env.OPENAI_API_KEY;
   if (!key)
     throw new Error(
@@ -297,9 +311,10 @@ function providerChain(): Provider[] {
   const has: Record<Provider, boolean> = {
     gemini: !!process.env.GEMINI_API_KEY,
     groq: !!process.env.GROQ_API_KEY,
+    openrouter: !!process.env.OPENROUTER_API_KEY,
     openai: !!process.env.OPENAI_API_KEY,
   };
-  const order: Provider[] = [getProvider(), "gemini", "groq", "openai"];
+  const order: Provider[] = [getProvider(), "gemini", "groq", "openrouter", "openai"];
   const chain: Provider[] = [];
   for (const p of order) if (has[p] && !chain.includes(p)) chain.push(p);
   const c = chain.length ? chain : [getProvider()];
@@ -341,6 +356,8 @@ async function chatRaw(provider: Provider, system: string, user: string): Promis
   const [baseUrl, key, model] =
     provider === "groq"
       ? ["https://api.groq.com/openai/v1", process.env.GROQ_API_KEY!, process.env.GROQ_MODEL || "llama-3.3-70b-versatile"]
+      : provider === "openrouter"
+      ? ["https://openrouter.ai/api/v1", process.env.OPENROUTER_API_KEY!, process.env.OPENROUTER_MODEL || "deepseek/deepseek-chat-v3-0324:free"]
       : ["https://api.openai.com/v1", process.env.OPENAI_API_KEY!, process.env.OPENAI_MODEL || "gpt-4o"];
   const res = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
