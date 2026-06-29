@@ -43,6 +43,21 @@ const TOPIC_WEIGHTS: Record<string, Record<string, number>> = {
     "Direct and Indirect Speech": 3, "Phrasal Verbs": 3, Homophones: 2,
     "Sentence Rearrangement": 3, "Reading Comprehension": 2,
   },
+  reasoning: {
+    "Coding-Decoding": 5, "Blood Relations": 4, "Syllogism": 4, "Seating Arrangement": 5,
+    "Puzzles & Arrangements": 5, "Series (Number/Letter)": 5, "Analogy": 4, "Classification": 4,
+    "Direction Sense": 3, "Ranking & Order": 3, "Statement & Conclusion": 3, "Statement & Assumption": 3,
+    "Mirror & Water Image": 3, "Paper Folding & Cutting": 3, "Dice & Cubes": 3,
+    "Mathematical Operations (BODMAS)": 3, "Odd One Out": 3, "Venn Diagram": 3,
+    "Missing Number": 3, "Embedded Figures": 2, "Counting Figures": 2, "Calendar & Clock": 3,
+  },
+  quant: {
+    "Number System & HCF/LCM": 4, "Percentage": 4, "Profit & Loss": 4, "SI & CI": 4,
+    "Ratio & Proportion": 3, "Average": 3, "Time & Work": 4, "Time Speed & Distance": 4,
+    "Boats & Streams": 3, "Pipes & Cisterns": 3, "Mixtures & Alligation": 3, "Algebra": 5,
+    "Geometry": 5, "Trigonometry": 5, "Mensuration 2D/3D": 5, "Data Interpretation": 4,
+    "Partnership": 2, "Ages": 2, "Simplification & Surds": 3, "Heights & Distances": 3,
+  },
   computer: {
     "Computer Fundamentals": 4, "Generations of Computers": 2, "Input Devices": 2,
     "Output Devices": 2, "Memory and Storage": 4, "CPU and Processing": 3,
